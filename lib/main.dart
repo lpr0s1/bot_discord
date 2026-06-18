@@ -10,9 +10,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      theme: ThemeData.dark(),
-      home: const BotCreatorScreen(),
+    return const MaterialApp(
+      home: BotCreatorScreen(),
     );
   }
 }
@@ -26,12 +25,8 @@ class BotCreatorScreen extends StatefulWidget {
 
 class _BotCreatorScreenState extends State<BotCreatorScreen> {
   final TextEditingController _tokenController = TextEditingController();
-  final TextEditingController _prefixController = TextEditingController(text: "!");
-  
   bool _isOnline = false;
-  bool _moderationEnabled = true;
   List<String> logs = [];
-  
   NyxxGateway? _client;
 
   void _addLog(String message) {
@@ -43,11 +38,11 @@ class _BotCreatorScreenState extends State<BotCreatorScreen> {
   void _startBot() async {
     final token = _tokenController.text.trim();
     if (token.isEmpty) {
-      _addLog("Erreur : Token vide !");
+      _addLog("Erreur : Token vide");
       return;
     }
 
-    _addLog("Connexion a Discord en cours...");
+    _addLog("Connexion en cours...");
 
     try {
       _client = await Nyxx.connectGateway(
@@ -59,44 +54,26 @@ class _BotCreatorScreenState extends State<BotCreatorScreen> {
         setState(() {
           _isOnline = true;
         });
-        _addLog("Bot connecte sous le pseudo : ${event.user.username}");
-        
-        _client!.updatePresence(PresenceBuilder(
-          status: UserStatus.online,
-          isAfk: false,
-          activities: [ActivityBuilder(name: "Bot Android Actif", type: ActivityType.game)],
-        ));
+        _addLog("Bot connecte");
       });
 
       _client!.onMessageCreate.listen((event) async {
-        // Empeche le bot de repondre a ses propres messages
-        if (event.message.author.id == _client!.self.id) return;
+        // Securite pour eviter que le bot ne se reponde a lui-meme
+        if (event.message.author.id == _client!.user.id) return;
 
-        _addLog("${event.message.author.username}: ${event.message.content}");
+        _addLog("Message recu de ${event.message.author.username}");
 
-        if (_moderationEnabled) {
-          final content = event.message.content.toLowerCase();
-          if (content.contains("merde") || content.contains("connard")) {
-            await event.message.delete();
-            await event.message.channel.sendMessage(MessageBuilder(
-              content: "<@${event.message.author.id}>, merci de rester poli !",
-            ));
-            _addLog("Moderation : Message supprime.");
-            return;
-          }
-        }
-
-        if (event.message.content == "${_prefixController.text}ping") {
+        // Commande de test basique
+        if (event.message.content == "!ping") {
           await event.message.channel.sendMessage(MessageBuilder(
             content: "Pong !",
-            replyId: event.message.id,
           ));
-          _addLog("Commande ping executee.");
+          _addLog("Reponse ping envoyee");
         }
       });
 
     } catch (e) {
-      _addLog("Erreur de connexion : $e");
+      _addLog("Erreur : $e");
     }
   }
 
@@ -106,70 +83,44 @@ class _BotCreatorScreenState extends State<BotCreatorScreen> {
       setState(() {
         _isOnline = false;
       });
-      _addLog("Le bot a ete arrete.");
+      _addLog("Bot arrete");
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Createur Bot Discord APK")),
+      appBar: AppBar(title: const Text("Bot Creator")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Text(
-              _isOnline ? "Statut : En ligne" : "Statut : Hors ligne",
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+            Text(_isOnline ? "Statut : En ligne" : "Statut : Hors ligne"),
             const SizedBox(height: 10),
             TextField(
               controller: _tokenController,
-              decoration: const InputDecoration(labelText: "Token du Bot Discord"),
-              obscureText: true,
-                ),
-            TextField(
-              controller: _prefixController,
-              decoration: const InputDecoration(labelText: "Prefixe des commandes"),
+              decoration: const InputDecoration(labelText: "Token Discord"),
             ),
-            SwitchListTile(
-              title: const Text("Activer la moderation automatique"),
-              value: _moderationEnabled,
-              onChanged: (val) => setState(() => _moderationEnabled = val),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: _isOnline ? null : _startBot,
+              child: const Text("DEMARRER"),
             ),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _isOnline ? null : _startBot,
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                    child: const Text("DEMARRER"),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _isOnline ? _stopBot : null,
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                    child: const Text("ARRETER"),
-                  ),
-                ),
-              ],
+            ElevatedButton(
+              onPressed: _isOnline ? _stopBot : null,
+              child: const Text("ARRETER"),
             ),
-            const Divider(),
-            const Text("Console d evenements en direct :"),
+            const SizedBox(height: 20),
+            const Text("Logs :"),
             Expanded(
               child: Container(
-                color: Colors.black,
+                color: Colors.black12,
                 width: double.infinity,
                 child: ListView.builder(
                   itemCount: logs.length,
                   itemBuilder: (context, index) => Padding(
                     padding: const EdgeInsets.all(4.0),
-                    child: Text(
-                      logs[index], 
-                      style: const TextStyle(color: Colors.greenAccent, fontFamily: 'monospace')
-                    ),
+                    child: Text(logs[index]),
                   ),
                 ),
               ),
