@@ -1,5 +1,5 @@
 name: bot_creator
-description: Un createur de bot Discord sur Android.
+description: Un createur de bot Discord minimaliste sur Android.
 version: 1.0.0+1
 
 environment:
