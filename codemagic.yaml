@@ -1,0 +1,24 @@
+workflows:
+  android-build:
+    name: Android APK Build
+    instance_type: mac_mini_m1
+    environment:
+      flutter: stable
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: '*'
+          include: true
+    scripts:
+      - name: Generer l environnement Android
+        script: |
+          flutter create . --platforms=android
+      - name: Recuperer les dependances Pub
+        script: |
+          flutter pub get
+      - name: Compiler l APK Release
+        script: |
+          flutter build apk --release
+    artifacts:
+      - build/app/outputs/flutter-apk/*-release.apk
