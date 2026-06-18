@@ -63,12 +63,13 @@ class _BotCreatorScreenState extends State<BotCreatorScreen> {
         
         _client!.updatePresence(PresenceBuilder(
           status: CurrentStatus.online,
+          isAfk: false,
           activities: [ActivityBuilder(name: "Bot Android Actif", type: ActivityType.game)],
         ));
       });
 
       _client!.onMessageCreate.listen((event) async {
-        if (event.message.author.bot) return;
+        if (event.message.author.isBot) return;
 
         _addLog("${event.message.author.username}: ${event.message.content}");
 
@@ -77,7 +78,7 @@ class _BotCreatorScreenState extends State<BotCreatorScreen> {
           if (content.contains("merde") || content.contains("connard")) {
             await event.message.delete();
             await event.message.channel.sendMessage(MessageBuilder(
-              content: "${event.message.author.mention}, merci de rester poli !",
+              content: "<@${event.message.author.id}>, merci de rester poli !",
             ));
             _addLog("Moderation : Message supprime.");
             return;
