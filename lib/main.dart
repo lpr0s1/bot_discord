@@ -62,14 +62,15 @@ class _BotCreatorScreenState extends State<BotCreatorScreen> {
         _addLog("Bot connecte sous le pseudo : ${event.user.username}");
         
         _client!.updatePresence(PresenceBuilder(
-          status: CurrentStatus.online,
+          status: UserStatus.online,
           isAfk: false,
           activities: [ActivityBuilder(name: "Bot Android Actif", type: ActivityType.game)],
         ));
       });
 
       _client!.onMessageCreate.listen((event) async {
-        if (event.message.author.isBot) return;
+        // Empeche le bot de repondre a ses propres messages
+        if (event.message.author.id == _client!.self.id) return;
 
         _addLog("${event.message.author.username}: ${event.message.content}");
 
@@ -126,7 +127,7 @@ class _BotCreatorScreenState extends State<BotCreatorScreen> {
               controller: _tokenController,
               decoration: const InputDecoration(labelText: "Token du Bot Discord"),
               obscureText: true,
-            ),
+                ),
             TextField(
               controller: _prefixController,
               decoration: const InputDecoration(labelText: "Prefixe des commandes"),
