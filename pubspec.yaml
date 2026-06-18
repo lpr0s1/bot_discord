@@ -1,0 +1,11 @@
+name: bot_creator
+description: Un createur de bot Discord sur Android.
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  nyxx: ^6.1.0
